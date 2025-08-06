@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, FastAPI, status, Response
+from fastapi import APIRouter, Depends, FastAPI, status, Response, HTTPException
 from sqlalchemy.orm import Session
 from ..controllers import orders as controller
 from ..schemas import orders as schema
@@ -33,3 +33,13 @@ def update(item_id: int, request: schema.OrderUpdate, db: Session = Depends(get_
 @router.delete("/{item_id}")
 def delete(item_id: int, db: Session = Depends(get_db)):
     return controller.delete(db=db, item_id=item_id)
+
+@router.get("/{item_id}")
+def track_order(item_id: str, db: Session = Depends(get_db)):
+    order = db.query(Item).filter(Item.id == item.id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return {"status": order.status, "created at": order.created_at}
+
+
+
