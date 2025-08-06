@@ -24,4 +24,4 @@ class Order(Base):
     total_price = Column(Float)
 
     order_details = relationship("OrderDetail", back_populates="order")
-    payment = relationship("Payment", back_populates="orders", uselist=False)
+    payments = relationship("Payment", back_populates="order")

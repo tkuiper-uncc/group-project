@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from ..models.payment import Payment, PaymentStatus
 from ..models.orders import Order, OrderStatus
 from ..schemas.payment import PaymentCreate, PaymentResponse
 from ..dependencies.database import get_db
+from datetime import datetime
 
 
 router = APIRouter(
@@ -30,7 +32,8 @@ def process_payment(payment_data: PaymentCreate, db: Session = Depends(get_db)):
         order_id = payment_data.order_id,
         amount = payment_data.amount,
         method = payment_data.method,
-        status = payment_data.status,
+        status = payment_status,
+        transaction_date=datetime.now(),
     )
 
     db.add(payment)
