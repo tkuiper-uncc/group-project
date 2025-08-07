@@ -26,6 +26,7 @@ class OrderBase(BaseModel):
 class OrderCreate(OrderBase):
     customer_id: Optional[int] = None  # Registered user
     order_details: List[OrderDetailCreate]  # Must include details
+    promo_code: Optional[str] = None  # new field for promo codes
 
 
 class OrderUpdate(BaseModel):
