@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, Response, Depends
 from ..models import orders as model, order_details as detail_model, sandwiches as sandwich_model
+from ..models import promo_codes as promo_model
 from sqlalchemy.exc import SQLAlchemyError
+from datetime import datetime
 import uuid
 
 
@@ -32,7 +34,12 @@ def create(db: Session, request):
             total_price += float(sandwich.price) * d.amount
             new_order.order_details.append(od)
 
-        new_order.total_price = total_price
+        # Apply promo code if present
+        discount_amount = 0
+        if hasattr(request, 'promo_code') and request.promo_code:
+            discount_amount = apply_promo_code(db, request.promo_code, total_price)
+
+        new_order.total_price = total_price - discount_amount
 
         db.add(new_order)
         db.commit()
@@ -41,9 +48,8 @@ def create(db: Session, request):
 
     except SQLAlchemyError as e:
         db.rollback()
-        error = str(e.__dict__['orig'])
+        error = str(e.__dict__.get('orig', e))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
-
 
 def read_all(db: Session):
     try:
@@ -53,6 +59,25 @@ def read_all(db: Session):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
     return result
 
+def apply_promo_code(db: Session, code: str, order_total: float):
+    promo = db.query(promo_model.PromoCode).filter(
+        promo_model.PromoCode.code == code,
+        promo_model.PromoCode.active == True,
+        promo_model.PromoCode.expiration_date >= datetime.utcnow()
+    ).first()
+
+    if not promo:
+        raise HTTPException(status_code=400, detail="Invalid or expired promo code")
+
+    if promo.usage_limit is not None and promo.times_used >= promo.usage_limit:
+        raise HTTPException(status_code=400, detail="Promo code usage limit reached")
+
+    discount_amount = order_total * (promo.discount_percent / 100)
+    # Optionally increment usage count here or after successful order commit
+    promo.times_used += 1
+    db.commit()
+
+    return discount_amount
 
 def read_one(db: Session, item_id):
     try:
