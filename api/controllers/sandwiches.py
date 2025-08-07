@@ -104,3 +104,25 @@ def delete(db: Session, sandwich_id: int):
             detail=error
         )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+from sqlalchemy import func
+from ..models.reviews import Review
+from ..models.sandwiches import Sandwich
+
+def get_popular_sandwiches(db: Session):
+    results = db.query(
+        Sandwich.id,
+        Sandwich.sandwich_name,
+        func.count(Review.id).label("review_count"),
+        func.avg(Review.rating).label("avg_rating")
+    ).join(Review).group_by(Sandwich.id).order_by(func.avg(Review.rating).desc()).all()
+
+    return [
+        {
+            "id": row.id,
+            "sandwich_name": row.sandwich_name,
+            "review_count": row.review_count,
+            "avg_rating": round(row.avg_rating, 2)
+        }
+        for row in results
+    ]
