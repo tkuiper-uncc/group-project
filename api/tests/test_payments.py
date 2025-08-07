@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from api.main import app
+from main import app
 from api.dependencies.database import SessionLocal
 from api.models.orders import Order, OrderStatus
 

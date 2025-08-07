@@ -1,12 +1,12 @@
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import index as indexRoute
-from .routers import orders, reports, payments
-from .models import model_loader
-from .dependencies.config import conf
-from .dependencies.database import engine, Base
-from .models.orders import Order
+from api.routers import index as indexRoute
+from api.routers import orders, reports, payments
+from api.models import model_loader
+from api.dependencies.config import conf
+from api.dependencies.database import engine, Base
+from api.models.orders import Order
 
 
 print("Creating database tables...")
