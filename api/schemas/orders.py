@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel
 from .order_details import OrderDetail
-
+from enum import Enum
 
 
 class OrderBase(BaseModel):
@@ -19,10 +19,20 @@ class OrderUpdate(BaseModel):
     description: Optional[str] = None
 
 
+class OrderStatus(str, Enum):
+    PENDING = "pending"
+    PREPARING = "preparing"
+    READY = "ready"
+    DELIVERED = "delivered"
+    CANCELLED = "cancelled"
+
+
 class Order(OrderBase):
     id: int
+    status: OrderStatus
     order_date: Optional[datetime] = None
     order_details: list[OrderDetail] = None
+    total_price: Optional[float] = None
 
     class ConfigDict:
         from_attributes = True
