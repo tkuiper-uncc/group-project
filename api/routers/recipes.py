@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from ..controllers import recipes as controller
 from ..schemas import recipes as schema
+from ..schemas.recipes import Recipe, RecipeCreate, RecipeUpdate
 from ..dependencies.database import get_db
 
 router = APIRouter(
@@ -10,17 +11,15 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=schema.Recipe)
-def create_recipe(request: schema.RecipeCreate, db: Session = Depends(get_db)):
+@router.post("/", response_model=Recipe, status_code=status.HTTP_201_CREATED)
+def create_recipe(request: RecipeCreate, db: Session = Depends(get_db)):
     return controller.create(db=db, request=request)
 
-
-@router.get("/", response_model=list[schema.Recipe])
+@router.get("/", response_model=list[Recipe])
 def read_all_recipes(db: Session = Depends(get_db)):
     return controller.read_all(db)
 
-
-@router.get("/{recipe_id}", response_model=schema.Recipe)
+@router.get("/{recipe_id}", response_model=Recipe)
 def read_one_recipe(recipe_id: int, db: Session = Depends(get_db)):
     return controller.read_one(db, recipe_id=recipe_id)
 
