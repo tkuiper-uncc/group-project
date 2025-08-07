@@ -23,6 +23,5 @@ class PaymentResponse(BaseModel):
     status: PaymentStatus
     transaction_date: datetime
 
-
-class Config:
-    orm_mode = True
+    class Config:
+        from_attributes = True

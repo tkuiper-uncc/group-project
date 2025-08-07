@@ -2,10 +2,10 @@ from sqlalchemy import Column, Integer, String, Float, ForeignKey, DATETIME, Enu
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ..dependencies.database import Base
-import enum
+from enum import Enum as PyEnum
 
 
-class PaymentStatus(str, enum.Enum):
+class PaymentStatus(PyEnum):
     PENDING = "PENDING"
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
@@ -22,3 +22,5 @@ class Payment(Base):
     transaction_date = Column(DATETIME, default=datetime.now)
 
     order = relationship("Order", back_populates="payments")
+
+
