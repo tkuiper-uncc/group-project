@@ -34,3 +34,7 @@ def update_sandwich(sandwich_id: int, request: schema.SandwichUpdate,
 @router.delete("/{sandwich_id}")
 def delete_sandwich(sandwich_id: int, db: Session = Depends(get_db)):
     return controller.delete(db=db, sandwich_id=sandwich_id)
+
+@router.get("/popular")
+def get_popular(db: Session = Depends(get_db)):
+    return controller.get_popular_sandwiches(db)
