@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from ..models.orders import Order
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func, desc, asc, or_, text
-
+from ..models.reviews import Review
+from ..models.sandwiches import Sandwich
 
 
 def create(db: Session, request):
@@ -34,6 +35,7 @@ def create(db: Session, request):
 
     return new_sandwich
 
+
 def read_all(db: Session):
     try:
         sandwiches = db.query(model.Sandwich).all()
@@ -44,6 +46,7 @@ def read_all(db: Session):
             detail=error
         )
     return sandwiches
+
 
 def read_one(db: Session, sandwich_id: int):
     try:
@@ -86,6 +89,7 @@ def update(db: Session, sandwich_id: int, request):
         )
     return sandwich.first()
 
+
 def delete(db: Session, sandwich_id: int):
     try:
         sandwich = db.query(model.Sandwich).filter(
@@ -112,9 +116,6 @@ def delete(db: Session, sandwich_id: int):
         )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-from sqlalchemy import func
-from ..models.reviews import Review
-from ..models.sandwiches import Sandwich
 
 def get_popular_sandwiches(db: Session):
     results = db.query(
@@ -122,16 +123,15 @@ def get_popular_sandwiches(db: Session):
         Sandwich.sandwich_name,
         func.count(Review.id).label("review_count"),
         func.avg(Review.rating).label("avg_rating")
-    ).join(Review).group_by(Sandwich.id).order_by(func.avg(Review.rating).desc()).all()
+    ).join(Review).group_by(Sandwich.id).order_by(func.avg(Review.rating).desc()).first()
 
     return [
         {
-            "id": row.id,
-            "sandwich_name": row.sandwich_name,
-            "review_count": row.review_count,
-            "avg_rating": round(row.avg_rating, 2)
-        }
-        for row in results
+            "id": results.id,
+            "sandwich_name": results.sandwich_name,
+            "review_count": results.review_count,
+            "avg_rating": round(results.avg_rating, 2)
+        } if results else None
     ]
 
 
