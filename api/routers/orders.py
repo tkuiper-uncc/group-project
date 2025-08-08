@@ -32,4 +32,5 @@ def update_order(item_id: int, request: schema.OrderUpdate, db: Session = Depend
 
 @router.delete("/{item_id}", operation_id="delete_order")
 def delete_order(item_id: int, db: Session = Depends(get_db)):
-    return controller.delete(db=db, item_id=item_id)
+    controller.delete(db=db, item_id=item_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -1,7 +1,13 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, Response
 from ..models import sandwiches as model
+from ..models.order_details import OrderDetail
+from datetime import datetime, timedelta
+from ..models.orders import Order
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func, desc, asc, or_, text
+
+
 
 def create(db: Session, request):
     # Create new sandwich
@@ -56,6 +62,7 @@ def read_one(db: Session, sandwich_id: int):
             detail=error
         )
     return sandwich
+
 
 def update(db: Session, sandwich_id: int, request):
     try:
@@ -126,3 +133,77 @@ def get_popular_sandwiches(db: Session):
         }
         for row in results
     ]
+
+
+def get_least_popular_sandwiches(db, days: int = 30, limit: int = 5):
+    since = datetime.utcnow() - timedelta(days=days)
+
+    recent_orders = (
+        db.query(Order.id.label("oid"))
+          .filter(Order.order_date >= since)
+          .subquery()
+    )
+
+    q = (
+        db.query(
+            Sandwich.id.label("id"),
+            Sandwich.sandwich_name.label("name"),
+            func.coalesce(func.count(OrderDetail.id), 0).label("units"),
+        )
+        .outerjoin(OrderDetail, OrderDetail.sandwich_id == Sandwich.id)
+        .outerjoin(recent_orders, recent_orders.c.oid == OrderDetail.order_id)
+        .group_by(Sandwich.id, Sandwich.sandwich_name)
+        .order_by(text("units ASC"), Sandwich.id.asc())
+        .limit(limit)
+    )
+
+    return [{"id": r.id, "name": r.name, "units": int(r.units or 0)} for r in q.all()]
+
+
+def get_sandwiches_with_most_complaints(
+        db: Session,
+        days: int,
+        rating_threshold: int,
+        limit: int,
+):
+
+    from ..models.reviews import Review
+
+    q = (
+        db.query(
+            Sandwich.id.label("id"),
+            Sandwich.sandwich_name.label("name"),
+            func.count(Review.id).label("complaints"),
+        )
+        .join(Review, Review.sandwich_id == Sandwich.id)
+        .filter (
+            Review.rating < rating_threshold,
+        )
+
+        .group_by(Sandwich.id, Sandwich.sandwich_name)
+        .order_by(desc("complaints"), asc(Sandwich.id))
+        .limit(limit)
+    )
+
+    return [
+        {"id": r.id, "name": r.name, "complaints": int(r.complaints or 0)}
+        for r in q.all()
+    ]
+
+
+def get_sandwiches_insights(
+        db: Session,
+        days_popularity: int,
+        days_complaints: int,
+        rating_threshold: int,
+        limit: int,
+):
+
+    return {
+        "least_popular_sandwiches": get_least_popular_sandwiches(db, days_popularity, limit),
+        "most_complaints_sandwiches": get_sandwiches_with_most_complaints(
+            db, days_complaints, rating_threshold, limit
+        ),
+
+    }
+

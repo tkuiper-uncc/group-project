@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from ..dependencies.database import Base
 
+
 class Review(Base):
     __tablename__ = "reviews"
 

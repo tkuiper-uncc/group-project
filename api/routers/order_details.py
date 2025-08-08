@@ -6,7 +6,7 @@ from ..dependencies.database import engine, get_db
 
 router = APIRouter(
     tags=['Order Details'],
-    prefix="/orderdetails"
+    prefix="/order_details"
 )
 
 
