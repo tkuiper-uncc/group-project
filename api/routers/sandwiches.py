@@ -94,3 +94,14 @@ def delete_sandwich(sandwich_id: int, db: Session = Depends(get_db)):
 @router.get("/popular")
 def get_popular(db: Session = Depends(get_db)):
     return controller.get_popular_sandwiches(db)
+
+@router.get("/featured")
+def get_featured_sandwiches():
+    """Simple featured endpoint that returns static data"""
+    return {
+        "featured": [
+            {"id": 1, "name": "Classic BLT", "description": "Our most popular sandwich"},
+            {"id": 2, "name": "Veggie Delight", "description": "A vegetarian favorite"},
+            {"id": 3, "name": "Spicy Chicken", "description": "For those who like heat"}
+        ]
+    }
